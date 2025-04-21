@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LoL レーンくじ</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+        }
+        input, button {
+            margin: 5px;
+            padding: 8px;
+        }
+        #playerList li {
+            list-style: none;
+            padding: 5px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .remove-btn {
+            background-color: red;
+            color: white;
+            border: none;
+            padding: 3px 6px;
+            cursor: pointer;
+        }
+        #results {
+            margin-top: 20px;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <h1>LoL レーンくじ</h1>
+    <p>プレイヤーの名前を入力して、レーンをランダムに決めよう！</p>
+    <input type="text" id="playerName" placeholder="プレイヤー名を入力">
+    <button onclick="addPlayer()">追加</button>
+    <button onclick="assignLanes()">レーン決定</button>
+    <button onclick="shuffleLanes()">再シャッフル</button>
+    <ul id="playerList"></ul>
+    <div id="results"></div>
+
+    <script>
+        let players = JSON.parse(localStorage.getItem("players")) || [];
+        const lanes = ["Top", "Jungle", "Mid", "ADC", "Support"];
+        
+        function savePlayers() {
+            localStorage.setItem("players", JSON.stringify(players));
+        }
+
+        function addPlayer() {
+            const nameInput = document.getElementById("playerName");
+            const name = nameInput.value.trim();
+            if (name === "") {
+                alert("プレイヤー名を入力してください！");
+                return;
+            }
+            if (players.includes(name)) {
+                alert("このプレイヤーはすでに追加されています！");
+                return;
+            }
+            players.push(name);
+            savePlayers();
+            updatePlayerList();
+            nameInput.value = "";
+        }
+
+        function removePlayer(name) {
+            players = players.filter(player => player !== name);
+            savePlayers();
+            updatePlayerList();
+        }
+
+        function updatePlayerList() {
+            const list = document.getElementById("playerList");
+            list.innerHTML = "";
+            players.forEach(player => {
+                const li = document.createElement("li");
+                li.textContent = player;
+                const removeBtn = document.createElement("button");
+                removeBtn.textContent = "削除";
+                removeBtn.classList.add("remove-btn");
+                removeBtn.onclick = () => removePlayer(player);
+                li.appendChild(removeBtn);
+                list.appendChild(li);
+            });
+        }
+
+        function assignLanes() {
+            if (players.length === 0) {
+                alert("プレイヤーを追加してください！");
+                return;
+            }
+            let shuffledLanes = [...lanes];
+            shuffledLanes.sort(() => Math.random() - 0.5);
+            let resultsHtml = "<h2>結果</h2><ul>";
+            players.forEach((player, index) => {
+                const lane = shuffledLanes[index % lanes.length];
+                resultsHtml += `<li>${player}: ${lane}</li>`;
+            });
+            resultsHtml += "</ul>";
+            document.getElementById("results").innerHTML = resultsHtml;
+        }
+
+        function shuffleLanes() {
+            if (document.getElementById("results").innerHTML === "") {
+                alert("先にレーンを決定してください！");
+                return;
+            }
+            assignLanes();
+        }
+
+        updatePlayerList();
+    </script>
+</body>
+</html>
